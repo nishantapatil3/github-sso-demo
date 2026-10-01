@@ -1,0 +1,28 @@
+name: github-sso-demo
+
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_PATH: /data/app.db
+    volumes:
+      - sso-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${APP_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sso-data:
